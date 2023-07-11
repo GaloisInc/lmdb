@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface, DeriveDataTypeable #-}
 
 -- | This module is a thin wrapper above lmdb.h.
--- 
+--
 -- Provisions for performance, convenience, or safety:
 --
 -- * Errors are shifted to `LMDB_Error` Haskell exceptions
@@ -18,22 +18,22 @@
 -- with user-defined comparison operations. (Though, if you plan
 -- to load a database with MDB_APPEND or MDB_APPENDDUP, you can
 -- use an unsafe dbi for just that portion.)
--- 
+--
 -- Despite these provisions, developers must still be cautious:
 --
--- * MDB_val objects are invalid outside their transaction. 
+-- * MDB_val objects are invalid outside their transaction.
 -- * Don't use write operations on a read-only transaction.
 -- * Use 'bound threads' for write transactions.
 --
 -- A slightly higher level API is planned, mostly to provide safer
--- and more convenient access compared to raw MDB_val objects. 
+-- and more convenient access compared to raw MDB_val objects.
 --
 -- Features not implemented:
 --
--- * functions directly using file handles 
--- * user-defined relocation functions 
+-- * functions directly using file handles
+-- * user-defined relocation functions
 -- * MDB_MULTIPLE is not currently supported (todo)
--- 
+--
 module Database.LMDB.Raw
     ( LMDB_Version(..), lmdb_version, lmdb_dyn_version
     , LMDB_Error(..), MDB_ErrCode(..)
@@ -136,7 +136,7 @@ import Foreign.C
 import Control.Applicative
 import Control.Monad
 import Control.Exception
-import Control.Concurrent 
+import Control.Concurrent
 import qualified Data.Array.Unboxed as A
 import qualified Data.List as L
 import Data.Typeable
@@ -151,7 +151,7 @@ import Data.IORef
 --  'safe': higher overhead, thread juggling, allows callbacks into Haskell
 --  'unsafe': lower overhead, reduced concurrency, no callbacks into Haskell
 foreign import ccall unsafe "lmdb.h mdb_version" _mdb_version :: Ptr CInt -> Ptr CInt -> Ptr CInt -> IO CString
-foreign import ccall unsafe "lmdb.h mdb_strerror" _mdb_strerror :: CInt -> CString 
+foreign import ccall unsafe "lmdb.h mdb_strerror" _mdb_strerror :: CInt -> CString
 
 foreign import ccall "lmdb.h mdb_env_create" _mdb_env_create :: Ptr (Ptr MDB_env) -> IO CInt
 foreign import ccall "lmdb.h mdb_env_open" _mdb_env_open :: Ptr MDB_env -> CString -> CUInt -> MDB_mode_t -> IO CInt
@@ -174,8 +174,8 @@ foreign import ccall "lmdb.h mdb_txn_begin" _mdb_txn_begin :: Ptr MDB_env -> Ptr
 foreign import ccall "lmdb.h mdb_txn_commit" _mdb_txn_commit :: Ptr MDB_txn -> IO CInt
 foreign import ccall "lmdb.h mdb_txn_abort" _mdb_txn_abort :: Ptr MDB_txn -> IO ()
 
--- I'm hoping to get a patch adding the following function into LMDB: 
--- foreign import ccall "lmdb.h mdb_txn_id" _mdb_txn_id :: MDB_txn -> IO MDB_txnid_t 
+-- I'm hoping to get a patch adding the following function into LMDB:
+-- foreign import ccall "lmdb.h mdb_txn_id" _mdb_txn_id :: MDB_txn -> IO MDB_txnid_t
 
 foreign import ccall "lmdb.h mdb_dbi_open" _mdb_dbi_open :: Ptr MDB_txn -> CString -> CUInt -> Ptr MDB_dbi_t -> IO CInt
 foreign import ccall "lmdb.h mdb_stat" _mdb_stat :: Ptr MDB_txn -> MDB_dbi_t -> Ptr MDB_stat -> IO CInt
@@ -199,7 +199,7 @@ foreign import ccall unsafe "lmdb.h mdb_get" _mdb_get' :: Ptr MDB_txn -> MDB_dbi
 foreign import ccall unsafe "lmdb.h mdb_put" _mdb_put' :: Ptr MDB_txn -> MDB_dbi' -> Ptr MDB_val -> Ptr MDB_val -> MDB_WriteFlags -> IO CInt
 foreign import ccall unsafe "lmdb.h mdb_del" _mdb_del' :: Ptr MDB_txn -> MDB_dbi' -> Ptr MDB_val -> Ptr MDB_val -> IO CInt
 
--- I dislike LMDB's cursor interface: one 'get' function with 18 special cases. 
+-- I dislike LMDB's cursor interface: one 'get' function with 18 special cases.
 -- Seems like it should be 18 functions.
 foreign import ccall safe "lmdb.h mdb_cursor_open" _mdb_cursor_open :: Ptr MDB_txn -> MDB_dbi -> Ptr (Ptr MDB_cursor) -> IO CInt
 foreign import ccall safe "lmdb.h mdb_cursor_close" _mdb_cursor_close :: Ptr MDB_cursor -> IO ()
@@ -225,7 +225,7 @@ foreign import ccall "lmdb.h mdb_txn_renew" _mdb_txn_renew :: Ptr MDB_txn -> IO 
 foreign import ccall "lmdb.h mdb_reader_list" _mdb_reader_list :: Ptr MDB_env -> FunPtr MDB_msg_func -> Ptr () -> IO CInt
 foreign import ccall "lmdb.h mdb_reader_check" _mdb_reader_check :: Ptr MDB_env -> Ptr CInt -> IO CInt
 
--- | User-defined comparison functions for keys. 
+-- | User-defined comparison functions for keys.
 type MDB_cmp_func = Ptr MDB_val -> Ptr MDB_val -> IO CInt
 foreign import ccall "wrapper"  wrapCmpFn :: MDB_cmp_func -> IO (FunPtr MDB_cmp_func)
 
@@ -234,7 +234,7 @@ type MDB_msg_func = CString -> Ptr () -> IO CInt
 foreign import ccall "wrapper" wrapMsgFunc :: MDB_msg_func -> IO (FunPtr MDB_msg_func)
 
 
--- Haskell seems to have difficulty inferring the `Ptr CInt` from 
+-- Haskell seems to have difficulty inferring the `Ptr CInt` from
 -- the _mdb_version call. (This seriously annoys me.)
 _peekCInt :: Ptr CInt -> IO CInt
 _peekCInt = peek
@@ -243,12 +243,12 @@ _peekCUInt :: Ptr CUInt -> IO CUInt
 _peekCUInt = peek
 
 -- | Version information for LMDB. Two potentially different versions
--- can be obtained: lmdb_version returns the version at the time of 
+-- can be obtained: lmdb_version returns the version at the time of
 -- binding (via C preprocessor macros) and lmdb_dyn_version returns a
 -- version for the bound library.
 --
 -- These bindings to Haskell will refuse to open the database when
--- the dynamic version of LMDB is different in the major or minor 
+-- the dynamic version of LMDB is different in the major or minor
 -- fields.
 data LMDB_Version = LMDB_Version
     { v_major :: {-# UNPACK #-} !Int
@@ -274,7 +274,7 @@ lmdb_dyn_version =
     allocaBytes (3 * szInt) $ \ pMajor -> do
         let pMinor = pMajor `plusPtr` szInt
         let pPatch = pMinor `plusPtr` szInt
-        cvText <- _mdb_version pMajor pMinor pPatch 
+        cvText <- _mdb_version pMajor pMinor pPatch
         vMajor <- fromIntegral <$> _peekCInt pMajor
         vMinor <- fromIntegral <$> _peekCInt pMinor
         vPatch <- fromIntegral <$> _peekCInt pPatch
@@ -287,11 +287,11 @@ lmdb_dyn_version =
             }
 
 -- | LMDB_Error is the exception type thrown in case a function from
--- the LMDB API does not return successfully. Clients should be 
+-- the LMDB API does not return successfully. Clients should be
 -- prepared to catch exceptions from any LMDB operation.
-data LMDB_Error = LMDB_Error 
-    { e_context     :: String 
-    , e_description :: String 
+data LMDB_Error = LMDB_Error
+    { e_context     :: String
+    , e_description :: String
     , e_code        :: Either Int MDB_ErrCode
     } deriving (Eq, Ord, Show, Typeable)
 instance Exception LMDB_Error
@@ -299,10 +299,10 @@ instance Exception LMDB_Error
 -- | Opaque structure for LMDB environment.
 --
 -- The environment additionally contains an MVar to enforce at most
--- one lightweight Haskell thread is writing at a time. This is 
+-- one lightweight Haskell thread is writing at a time. This is
 -- necessary so long as LMDB uses a long-lived mutex for writes, as
 -- in v0.9.10.
--- 
+--
 data MDB_env = MDB_env
     { _env_ptr   :: {-# UNPACK #-} !(Ptr MDB_env) -- opaque pointer to LMDB object
     , _env_wlock :: {-# UNPACK #-} !(MVar ThreadId) -- write lock
@@ -320,7 +320,7 @@ data MDB_txn = MDB_txn
 newtype MDB_txnid = MDB_txnid { _txnid :: MDB_txnid_t } deriving (Ord, Eq, Show)
 
 -- | Handle for a database in the environment.
-newtype MDB_dbi = MDB_dbi { _dbi :: MDB_dbi_t } 
+newtype MDB_dbi = MDB_dbi { _dbi :: MDB_dbi_t }
 
 -- | Opaque structure for LMDB cursor.
 data MDB_cursor = MDB_cursor
@@ -452,12 +452,12 @@ compileDBFlags = fromIntegral . L.foldl' (.|.) 0 . fmap ((A.!) dbFlagsArray)
 decompileDBFlags :: CUInt -> [MDB_DbFlag]
 decompileDBFlags = decompileBitFlags dbFlags . fromIntegral
 
-data MDB_WriteFlag 
+data MDB_WriteFlag
     = MDB_NOOVERWRITE
     | MDB_NODUPDATA
-    | MDB_CURRENT  
+    | MDB_CURRENT
     --  | MDB_RESERVE  -- (needs dedicated function)
-    | MDB_APPEND   
+    | MDB_APPEND
     | MDB_APPENDDUP
     --  | MDB_MULTIPLE -- (needs special handling)
     deriving (Eq, Ord, Bounded, A.Ix, Show)
@@ -482,7 +482,7 @@ writeFlagsArray = A.accumArray (.|.) 0 (minBound,maxBound) writeFlags
 -- from a list on a per-write basis.
 newtype MDB_WriteFlags = MDB_WriteFlags CUInt
 
--- | compile a list of write flags. 
+-- | compile a list of write flags.
 compileWriteFlags :: [MDB_WriteFlag] -> MDB_WriteFlags
 compileWriteFlags = MDB_WriteFlags . L.foldl' addWF 0 where
     addWF n wf = n .|. fromIntegral (writeFlagsArray A.! wf)
@@ -530,7 +530,7 @@ cursorOps =
     ,(MDB_SET_RANGE, #const MDB_SET_RANGE)
     ]
 
-cursorOpsArray :: A.UArray MDB_cursor_op Int 
+cursorOpsArray :: A.UArray MDB_cursor_op Int
 cursorOpsArray = A.accumArray (flip const) minBound (minBound,maxBound) cursorOps
 
 cursorOp :: MDB_cursor_op -> (#type MDB_cursor_op)
@@ -587,7 +587,7 @@ errCodes =
     ]
 
 _numToErrVal :: Int -> Either Int MDB_ErrCode
-_numToErrVal code = 
+_numToErrVal code =
     case L.find ((== code) . snd) errCodes of
         Nothing -> Left code
         Just (ec,_) -> Right ec
@@ -605,24 +605,24 @@ _throwLMDBErrNum context errNum = do
 -- | Allocate an environment object. This doesn't open the environment.
 --
 -- After creation, but before opening, please use:
--- 
---   mdb_env_set_mapsize 
+--
+--   mdb_env_set_mapsize
 --   mdb_env_set_maxreaders
 --   mdb_env_set_maxdbs
 --
 -- Then, just after opening, you should create a transaction to open
--- all the databases (MDB_dbi and MDB_dbi' values) your application 
--- will use. 
+-- all the databases (MDB_dbi and MDB_dbi' values) your application
+-- will use.
 --
--- The typical use case would then involve keeping all these open 
+-- The typical use case would then involve keeping all these open
 -- until your application either shuts down or crashes.
--- 
+--
 -- In addition to normal LMDB errors, this operation may throw an
 -- MDB_VERSION_MISMATCH if the Haskell LMDB bindings don't match
 -- the dynamic version. If this happens, you'll need to rebuild the
 -- lmdb Haskell package.
 mdb_env_create :: IO MDB_env
-mdb_env_create = alloca $ \ ppEnv -> 
+mdb_env_create = alloca $ \ ppEnv ->
     lmdb_validate_version_match >>
     _mdb_env_create ppEnv >>= \ rc ->
     if (0 /= rc) then _throwLMDBErrNum "mdb_env_create" rc else
@@ -630,20 +630,20 @@ mdb_env_create = alloca $ \ ppEnv ->
 
 
 lmdb_validate_version_match :: IO ()
-lmdb_validate_version_match = 
+lmdb_validate_version_match =
     let vStat = lmdb_version in
     lmdb_dyn_version >>= \ vDyn ->
     unless (versionMatch vStat vDyn) $
         throwIO $! LMDB_Error
             { e_context = "lmdb_validate_version_match"
-            , e_description = "Haskell bindings: " ++ show vStat 
+            , e_description = "Haskell bindings: " ++ show vStat
                            ++ "\tDynamic library: " ++ show vDyn
             , e_code = Right MDB_VERSION_MISMATCH
             }
 
 -- this match function is a bit relaxed, e.g. it will accept
 -- LMDB 0.9.10 with 0.9.8, so long as the first two numbers
--- match. 
+-- match.
 versionMatch :: LMDB_Version -> LMDB_Version -> Bool
 versionMatch vA vB = matchMajor && matchMinor where
     matchMajor = ((==) `on` v_major) vA vB
@@ -660,9 +660,9 @@ versionMatch vA vB = matchMajor && matchMinor where
 --    Open all DBI handles the app will need.
 --    Commit the transaction.
 --    Use those DBI handles in subsequent transactions
--- 
+--
 mdb_env_open :: MDB_env -> FilePath -> [MDB_EnvFlag] -> IO ()
-mdb_env_open env fp flags = 
+mdb_env_open env fp flags =
     let iFlags = (#const MDB_NOTLS) .|. (compileEnvFlags flags) in
     let unix_mode = (6 * 64 + 6 * 8) in -- mode 0660, read-write for user+group
     withCString fp $ \ cfp ->
@@ -671,19 +671,19 @@ mdb_env_open env fp flags =
             _throwLMDBErrNum "mdb_env_open" rc
 
 -- | Copy the environment to an empty (but existing) directory.
--- 
+--
 -- Note: the LMDB copy operation temporarily grabs the writer mutex.
 -- Unfortunately, this greatly complicates the binding to Haskell.
 -- This interface, mdb_env_copy, conservatively blocks all writers
--- in the same process for the entire duration of copy. 
+-- in the same process for the entire duration of copy.
 --
 -- Recommendation: Don't use this function in the same process with
 -- writers. Consider use of the `mdb_copy` command line utility if
 -- you need hot copies.
 --
 mdb_env_copy :: MDB_env -> FilePath -> IO ()
-mdb_env_copy env fp = 
-    runInBoundThread $ 
+mdb_env_copy env fp =
+    runInBoundThread $
     bracket_ (_lockEnv env) (_unlockEnv env) $
     withCString fp $ \ cfp ->
         _mdb_env_copy (_env_ptr env) cfp >>= \ rc ->
@@ -716,24 +716,24 @@ mdb_env_sync env =
 
 -- | Force buffered writes to disk before returning.
 mdb_env_sync_flush :: MDB_env -> IO ()
-mdb_env_sync_flush env = 
+mdb_env_sync_flush env =
     _mdb_env_sync (_env_ptr env) 1 >>= \ rc ->
     unless (0 == rc) (_throwLMDBErrNum "mdb_env_sync_flush" rc)
 
 -- | Close the environment. The MDB_env object should not be used by
 -- any operations during or after closing.
 mdb_env_close :: MDB_env -> IO ()
-mdb_env_close env = _lockEnv env >> _mdb_env_close (_env_ptr env) 
+mdb_env_close env = _lockEnv env >> _mdb_env_close (_env_ptr env)
 
 -- | Set flags for the environment.
 mdb_env_set_flags :: MDB_env -> [MDB_EnvFlag] -> IO ()
-mdb_env_set_flags env flags = 
+mdb_env_set_flags env flags =
     _mdb_env_set_flags (_env_ptr env) (compileEnvFlags flags) 1 >>= \ rc ->
     unless (0 == rc) $ _throwLMDBErrNum "mdb_env_set_flags" rc
 
 -- | Unset flags for the environment.
 mdb_env_unset_flags :: MDB_env -> [MDB_EnvFlag] -> IO ()
-mdb_env_unset_flags env flags = 
+mdb_env_unset_flags env flags =
     _mdb_env_set_flags (_env_ptr env) (compileEnvFlags flags) 0 >>= \ rc ->
     unless (0 == rc) $ _throwLMDBErrNum "mdb_env_unset_flags" rc
 
@@ -751,22 +751,22 @@ _mdb_env_get_flags_u env = alloca $ \ pFlags ->
 mdb_env_get_path :: MDB_env -> IO FilePath
 mdb_env_get_path env = alloca $ \ pPathStr ->
     _mdb_env_get_path (_env_ptr env) pPathStr >>= \ rc ->
-    if (0 == rc) then peekCString =<< peek pPathStr else 
+    if (0 == rc) then peekCString =<< peek pPathStr else
     _throwLMDBErrNum "mdb_env_get_path" rc
 
--- | Set the memory map size, in bytes, for this environment. This 
--- determines the maximum size for the environment and databases, 
+-- | Set the memory map size, in bytes, for this environment. This
+-- determines the maximum size for the environment and databases,
 -- but typically only a small fraction of the database is in memory
--- at any given moment. 
+-- at any given moment.
 --
 -- It is not a problem to set this to a very large number, hundreds
--- of gigabytes or even terabytes, assuming a sufficiently large 
+-- of gigabytes or even terabytes, assuming a sufficiently large
 -- address space. It should be set to a multiple of page size.
 --
--- The default map size is 1MB, intentionally set low to force 
+-- The default map size is 1MB, intentionally set low to force
 -- developers to select something larger.
 mdb_env_set_mapsize :: MDB_env -> Int -> IO ()
-mdb_env_set_mapsize env nBytes = 
+mdb_env_set_mapsize env nBytes =
     _mdb_env_set_mapsize (_env_ptr env) (fromIntegral nBytes) >>= \ rc ->
     unless (0 == rc) (_throwLMDBErrNum "mdb_env_set_mapsize" rc)
 
@@ -784,9 +784,9 @@ mdb_env_get_maxreaders env = alloca $ \ pCount ->
     _throwLMDBErrNum "mdb_env_get_maxreaders" rc
 
 -- | Set the maximum number of named databases. LMDB is designed to
--- support a small handful of databases. 
+-- support a small handful of databases.
 mdb_env_set_maxdbs :: MDB_env -> Int -> IO ()
-mdb_env_set_maxdbs env nDBs = 
+mdb_env_set_maxdbs env nDBs =
     _mdb_env_set_maxdbs (_env_ptr env) (fromIntegral nDBs) >>= \ rc ->
     unless (0 == rc) (_throwLMDBErrNum "mdb_env_set_maxdbs" rc)
 
@@ -797,17 +797,17 @@ mdb_env_get_maxkeysize env = fromIntegral <$> _mdb_env_get_maxkeysize (_env_ptr 
 
 -- | Check for stale readers, and return number of stale readers cleared.
 mdb_reader_check :: MDB_env -> IO Int
-mdb_reader_check env = 
+mdb_reader_check env =
     alloca $ \ pCount ->
     _mdb_reader_check (_env_ptr env) pCount >>= \ rc ->
     if (0 == rc) then fromIntegral <$> _peekCInt pCount else
-    _throwLMDBErrNum "mdb_reader_check" rc 
+    _throwLMDBErrNum "mdb_reader_check" rc
 
 -- | Dump entries from reader lock table (for human consumption)
 mdb_reader_list :: MDB_env -> IO String
 mdb_reader_list env =
     newIORef [] >>= \ rf ->
-    let onMsg cs _ = 
+    let onMsg cs _ =
             peekCString cs >>= \ msg ->
             modifyIORef rf (msg:) >>
             return 0
@@ -826,7 +826,7 @@ withMsgFunc f = bracket (wrapMsgFunc f) freeHaskellFunPtr
 --     mdb_txn_begin env parent bReadOnly
 --
 -- NOTE: Unless your MDB_env was created with MDB_NOLOCK, it is necessary
--- that read-write transactions be created and completed in one Haskell 
+-- that read-write transactions be created and completed in one Haskell
 -- 'bound' thread, e.g. via forkOS or runInBoundThread. The bound threads
 -- are necessary because LMDB uses OS-level mutexes which track the thread
 -- ID of their owning thread.
@@ -839,7 +839,7 @@ withMsgFunc f = bracket (wrapMsgFunc f) freeHaskellFunPtr
 -- only one child should be active at a time, all in the same OS thread.
 --
 mdb_txn_begin :: MDB_env -> Maybe MDB_txn -> Bool -> IO MDB_txn
-mdb_txn_begin env parent bReadOnly = mask_ $ 
+mdb_txn_begin env parent bReadOnly = mask_ $
     let bWriteTxn = not bReadOnly in
     let bLockForWrite = bWriteTxn && isNothing parent in
 
@@ -862,13 +862,13 @@ mdb_txn_begin env parent bReadOnly = mask_ $
                           , _txn_p = parent
                           }
 
--- Haskell-level writer lock for the environment. 
+-- Haskell-level writer lock for the environment.
 --
 -- This is necessary because otherwise multiple Haskell threads on
--- the same OS thread can acquire the same lock (in windows) or 
+-- the same OS thread can acquire the same lock (in windows) or
 -- deadlock (in posix systems). LMDB doesn't really support M:N
 -- writer threads.
--- 
+--
 -- Note: this will also enforce that the caller is operating in a
 -- bound thread. So we can only _lockEnv from a bound thread, and
 -- we can only _unlockEnv from the same thread.
@@ -895,7 +895,7 @@ _lockEnv env = do
     hasFlag f fs = (f == (f .&. fs))
     getA <||> getB = getA >>= \ a -> if a then return True else getB
 
-_unlockEnv env = 
+_unlockEnv env =
     myThreadId >>= \ self ->
     let m = (_env_wlock env) in
     mask_ $
@@ -904,8 +904,8 @@ _unlockEnv env =
             putMVar m owner >> -- oops!
             throwIO _unlockErr
 
--- compute whether this transaction should hold the write lock. 
--- If it does, unlock it. Otherwise, return. 
+-- compute whether this transaction should hold the write lock.
+-- If it does, unlock it. Otherwise, return.
 _unlockTxn :: MDB_txn -> IO ()
 _unlockTxn txn =
     let bHasLock = _txn_rw txn && isNothing (_txn_p txn) in
@@ -924,14 +924,14 @@ mdb_txn_commit txn = mask_ $
 
 -- | Abort a transaction. Don't use the transaction after this.
 mdb_txn_abort :: MDB_txn -> IO ()
-mdb_txn_abort txn = mask_ $ 
-    _mdb_txn_abort (_txn_ptr txn) >> 
+mdb_txn_abort txn = mask_ $
+    _mdb_txn_abort (_txn_ptr txn) >>
     _unlockTxn txn
 
--- | Abort a read-only transaction, but don't destroy it. 
+-- | Abort a read-only transaction, but don't destroy it.
 -- Keep it available for mdb_txn_renew.
 mdb_txn_reset :: MDB_txn -> IO ()
-mdb_txn_reset txn = _mdb_txn_reset (_txn_ptr txn) 
+mdb_txn_reset txn = _mdb_txn_reset (_txn_ptr txn)
 
 -- | Renew a read-only transaction that was previously _reset.
 mdb_txn_renew :: MDB_txn -> IO ()
@@ -942,8 +942,8 @@ mdb_txn_renew txn =
 
 {-
 
--- I'm hoping to get a patch adding the following function into the main LMDB: 
--- foreign import ccall "lmdb.h mdb_txn_id" _mdb_txn_id :: MDB_txn -> IO MDB_txnid_t 
+-- I'm hoping to get a patch adding the following function into the main LMDB:
+-- foreign import ccall "lmdb.h mdb_txn_id" _mdb_txn_id :: MDB_txn -> IO MDB_txnid_t
 
 -}
 
@@ -1014,13 +1014,13 @@ mdb_dbi_open_t txn dbName flags = -- use string name
     _throwLMDBErrNum "mdb_dbi_open" rc
 
 mdb_stat_t :: MDB_txn -> MDB_dbi_t -> IO MDB_stat
-mdb_stat_t txn dbi = 
+mdb_stat_t txn dbi =
     alloca $ \ pStat ->
     _mdb_stat (_txn_ptr txn) dbi pStat >>= \ rc ->
     if (0 == rc) then peek pStat else
     _throwLMDBErrNum "mdb_stat" rc
 
-mdb_dbi_flags_t :: MDB_txn -> MDB_dbi_t -> IO [MDB_DbFlag] 
+mdb_dbi_flags_t :: MDB_txn -> MDB_dbi_t -> IO [MDB_DbFlag]
 mdb_dbi_flags_t txn dbi =
     alloca $ \ pFlags ->
     _mdb_dbi_flags (_txn_ptr txn) dbi pFlags >>= \ rc ->
@@ -1031,7 +1031,7 @@ mdb_dbi_close_t :: MDB_env -> MDB_dbi_t -> IO ()
 mdb_dbi_close_t env dbi = _mdb_dbi_close (_env_ptr env) dbi
 
 mdb_drop_t :: MDB_txn -> MDB_dbi_t -> IO ()
-mdb_drop_t txn dbi = 
+mdb_drop_t txn dbi =
     _mdb_drop (_txn_ptr txn) dbi 1 >>= \ rc ->
     unless (0 == rc) (_throwLMDBErrNum "mdb_drop" rc)
 
@@ -1222,7 +1222,7 @@ mdb_cursor_open txn dbi =
         }
 
 mdb_cursor_open' :: MDB_txn -> MDB_dbi' -> IO MDB_cursor'
-mdb_cursor_open' txn dbi = 
+mdb_cursor_open' txn dbi =
     alloca $ \ ppCursor ->
     _mdb_cursor_open' (_txn_ptr txn) dbi ppCursor >>= \ rc ->
     if (0 /= rc) then _throwLMDBErrNum "mdb_cursor_open" rc else
@@ -1240,7 +1240,7 @@ mdb_cursor_open' txn dbi =
 -- In this case, False is returned for MDB_NOTFOUND (in which case the
 -- cursor should not be moved), and True is returned for MDB_SUCCESS.
 -- Any other return value from LMDB will result in an exception.
--- 
+--
 -- Depending on the MDB_cursor_op, additional values may be returned
 -- via the pointers. At the moment
 mdb_cursor_get :: MDB_cursor_op -> MDB_cursor -> Ptr MDB_val -> Ptr MDB_val -> IO Bool
@@ -1264,7 +1264,7 @@ mdb_cursor_get' op crs pKey pData = _mdb_cursor_get' (_crs_ptr' crs) pKey pData 
 -- and otherwise throws an exception.
 mdb_cursor_put :: MDB_WriteFlags -> MDB_cursor -> MDB_val -> MDB_val -> IO Bool
 mdb_cursor_put wf crs key val =
-    withKVPtrs key val $ \ pKey pVal -> 
+    withKVPtrs key val $ \ pKey pVal ->
     _mdb_cursor_put (_crs_ptr crs) pKey pVal wf >>= \ rc ->
     r_cursor_put rc
 {-# INLINE mdb_cursor_put #-}
@@ -1283,7 +1283,7 @@ mdb_cursor_put' wf crs key val =
     r_cursor_put rc
 {-# INLINE mdb_cursor_put' #-}
 
--- | Delete the value at the cursor. 
+-- | Delete the value at the cursor.
 mdb_cursor_del :: MDB_WriteFlags -> MDB_cursor -> IO ()
 mdb_cursor_del wf crs = _mdb_cursor_del (_crs_ptr crs) wf >>= r_cursor_del
 {-# INLINE mdb_cursor_del #-}
@@ -1296,7 +1296,7 @@ mdb_cursor_del' :: MDB_WriteFlags -> MDB_cursor' -> IO ()
 mdb_cursor_del' wf crs = _mdb_cursor_del' (_crs_ptr' crs) wf >>= r_cursor_del
 {-# INLINE mdb_cursor_del' #-}
 
--- | Close a cursor. don't use after this. In general, cursors should 
+-- | Close a cursor. don't use after this. In general, cursors should
 -- be closed before their associated transaction is commited or aborted.
 mdb_cursor_close :: MDB_cursor -> IO ()
 mdb_cursor_close crs = _mdb_cursor_close (_crs_ptr crs)
@@ -1320,8 +1320,8 @@ mdb_cursor_dbi' = _crs_dbi'
 
 -- | count number of duplicate data items at cursor's current location.
 mdb_cursor_count :: MDB_cursor -> IO Int
-mdb_cursor_count crs = 
-    alloca $ \ pCount -> 
+mdb_cursor_count crs =
+    alloca $ \ pCount ->
     _mdb_cursor_count (_crs_ptr crs) pCount >>= \ rc ->
     if (0 == rc) then fromIntegral <$> _peekSize pCount else
     _throwLMDBErrNum "mdb_cursor_count" rc
@@ -1331,8 +1331,8 @@ _peekSize :: Ptr CSize -> IO CSize
 _peekSize = peek
 
 mdb_cursor_count' :: MDB_cursor' -> IO Int
-mdb_cursor_count' crs = 
-    alloca $ \ pCount -> 
+mdb_cursor_count' crs =
+    alloca $ \ pCount ->
     _mdb_cursor_count' (_crs_ptr' crs) pCount >>= \ rc ->
     if (0 == rc) then fromIntegral <$> _peekSize pCount else
     _throwLMDBErrNum "mdb_cursor_count" rc
@@ -1340,7 +1340,7 @@ mdb_cursor_count' crs =
 
 
 -- for cursor get...
---  I'm not really sure what I want to do here, not quite yet. 
+--  I'm not really sure what I want to do here, not quite yet.
 --  maybe I should write a bunch of individual functions?
 
 {-
@@ -1360,20 +1360,20 @@ cmpBytesToCmpFn cmp vL vR = do
 -- | Create a user-defined comparison funcion over ByteStrings
 wrapCmpBytes :: (ByteString -> ByteString -> Ord) -> MDB_cmp_func
 wrapCmpBytes = as_MDB_cmp_func . cmpBytesToCmpFn
-    
+
 -- | Convert a value to a bytestring in O(1) time. Note, however,
--- that this bytestring refers into a memory-mapped page in the 
+-- that this bytestring refers into a memory-mapped page in the
 -- database, which may be reused after the transaction that obtained
 -- the value is dropped. Developers must be careful to ensure the
 -- bytestring doesn't stick around in any lazy computations.
 --
--- Consider use of the safer, higher level API that will strongly 
+-- Consider use of the safer, higher level API that will strongly
 -- associate a value with a particular transaction.
 valToBytes :: MDB_val -> IO ByteString
 valToBytes (MDB_val sz pd) = do
     fpd <- newForeignPtr_ pd
     return $! B.fromForeignPtr fpd 0 (fromIntegral sz)
-    
+
 -}
 
 
@@ -1424,7 +1424,7 @@ instance Storable MDB_envinfo where
         last_txnid <- #{peek MDB_envinfo, me_last_txnid} ptr
         maxreaders <- #{peek MDB_envinfo, me_maxreaders} ptr
         numreaders <- #{peek MDB_envinfo, me_numreaders} ptr
-        return $! MDB_envinfo 
+        return $! MDB_envinfo
             { me_mapaddr = mapaddr
             , me_mapsize = mapsize
             , me_last_pgno = last_pgno
