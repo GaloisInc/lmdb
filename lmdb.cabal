@@ -28,7 +28,7 @@ License: BSD2
 license-file: LICENSE
 Stability: experimental
 build-type: Simple
-cabal-version: >= 1.16.0.3
+cabal-version: 1.16.0.3
 extra-source-files:
   README.md
   cbits/lmdb.h cbits/mdb.c cbits/midl.c cbits/midl.h
