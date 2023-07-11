@@ -19,11 +19,11 @@ Description:
   API is desired, please consider contributing, or develop a separate package.
 
 Author: David Barbour
-Maintainer: dmbarbour@gmail.com
-Homepage: http://github.com/dmbarbour/haskell-lmdb
+Maintainer: Ryan Scott <rscott@galois.com>
+Homepage: http://github.com/GaloisInc/lmdb
 
 Package-Url:
-Copyright: (c) 2014 by David Barbour
+Copyright: (c) 2014 by David Barbour, (c) 2023 Galois, Inc.
 License: BSD2
 license-file: LICENSE
 Stability: experimental
@@ -35,7 +35,7 @@ extra-source-files:
 
 Source-repository head
   type: git
-  location: http://github.com/dmbarbour/haskell-lmdb.git
+  location: https://github.com/GaloisInc/lmdb
 
 flag pkg-config
   default:     False
