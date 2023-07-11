@@ -47,5 +47,5 @@ Library
   c-sources:
   extra-libraries: lmdb
 
-  ghc-options: -Wall -auto-all
+  ghc-options: -Wall
 
