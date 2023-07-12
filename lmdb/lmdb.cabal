@@ -42,6 +42,7 @@ tested-with:
 Source-repository head
   type: git
   location: https://github.com/GaloisInc/lmdb
+  subdir: lmdb
 
 flag pkg-config
   default:     False
