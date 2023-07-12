@@ -32,6 +32,12 @@ cabal-version: 1.16.0.3
 extra-source-files:
   README.md
   cbits/lmdb.h cbits/mdb.c cbits/midl.c cbits/midl.h
+tested-with:
+  GHC==8.10.7,
+  GHC==9.0.2,
+  GHC==9.2.7,
+  GHC==9.4.5,
+  GHC==9.6.2
 
 Source-repository head
   type: git
