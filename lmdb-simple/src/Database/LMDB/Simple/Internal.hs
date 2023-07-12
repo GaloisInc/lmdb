@@ -1,5 +1,6 @@
 
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Database.LMDB.Simple.Internal
   ( ReadWrite
@@ -46,6 +47,7 @@ import Control.Exception
 import Control.Monad
   ( (>=>)
   , foldM
+  , unless
   )
 
 import Control.Monad.IO.Class
@@ -191,7 +193,9 @@ marshalOutBS bs f =
 
 copyLazyBS :: BSL.ByteString -> Ptr Word8 -> Int -> IO ()
 copyLazyBS lbs ptr rem =
-  foldM copyBS (ptr, rem) (toChunks lbs) >>= \(_, 0) -> return ()
+  foldM copyBS (ptr, rem) (toChunks lbs) >>= \(_, rem') ->
+    unless (rem' == 0) $
+      fail $ "copyLazyBS: Leftover bytes: " ++ show rem'
 
   where copyBS :: (Ptr Word8, Int) -> BS.ByteString -> IO (Ptr Word8, Int)
         copyBS (ptr, rem) bs = unsafeUseAsCStringLen bs $ \(bsp, len) ->
