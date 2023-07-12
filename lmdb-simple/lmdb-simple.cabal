@@ -14,8 +14,8 @@ license:             BSD3
 license-file:        LICENSE
 
 author:              Rob Leslie
-maintainer:          rob@mars.org
-copyright:           © 2017–2018 Robert Leslie
+maintainer:          Ryan Scott <rscott@galois.com>
+copyright:           © 2017–2018 Robert Leslie, © 2023 Galois, Inc.
 
 stability:           experimental
 category:            Database
@@ -36,7 +36,7 @@ tested-with:
 
 source-repository head
   type:              git
-  location:          https://github.com/verement/lmdb-simple.git
+  location:          https://github.com/GaloisInc/lmdb
 
 library
   hs-source-dirs:      src
