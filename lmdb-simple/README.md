@@ -1,6 +1,16 @@
 Simple Haskell API for LMDB
 ===========================
 
+(Note: this is a fork of `lmdb-simple` from the [upstream
+repo](https://github.com/verement/lmdb-simple). This is largely identical to
+the original library, but with the following changes:
+
+* The upper version bounds on `bytestring` have been raised.
+* The test suite works properly with `cabal v2-test`.
+* Warnings that appear on recent versions of GHC have been fixed.
+
+The rest of this `README` is identical to the one in the upstream repo.)
+
 This package allows you to store arbitrary Haskell values in and retrieve them
 from a persistent [Lightning Memory-mapped Database][LMDB] on disk.
 
