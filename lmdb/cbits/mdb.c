@@ -318,6 +318,8 @@ typedef HANDLE mdb_mutex_t, mdb_mutexref_t;
 #define GET_PAGESIZE(x) {SYSTEM_INFO si; GetSystemInfo(&si); (x) = si.dwPageSize;}
 #define	close(fd)	(CloseHandle(fd) ? 0 : -1)
 #define	munmap(ptr,len)	UnmapViewOfFile(ptr)
+// Work around https://gitlab.haskell.org/ghc/ghc/-/issues/22694
+#define strdup _strdup
 #ifdef PROCESS_QUERY_LIMITED_INFORMATION
 #define MDB_PROCESS_QUERY_LIMITED_INFORMATION PROCESS_QUERY_LIMITED_INFORMATION
 #else
