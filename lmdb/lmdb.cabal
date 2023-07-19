@@ -68,5 +68,17 @@ Library
     install-includes: lmdb.h midl.h
     c-sources: cbits/mdb.c cbits/midl.c
 
+  -- GHC 9.4.5, 9.6.1, and 9.6.2 on Windows do not link against mingwex, but
+  -- lmdb implicitly depends on this library due to its use of _GNU_SOURCE,
+  -- which implies mingwex on Windows. To avoid linker errors in the absence of
+  -- a mingwex dependency (see https://gitlab.haskell.org/ghc/ghc/-/issues/23533
+  -- for an example of this), we depend on mingwex explicitly here.
+  --
+  -- Other versions of GHC on Windows already depend on mingwex, so we guard
+  -- this behind appropriate conditionals.
+  if os(windows)
+    if (impl(ghc >= 9.4.5) && !impl(ghc >= 9.4.6)) || (impl(ghc >= 9.6.1) && !impl(ghc >= 9.6.3))
+      extra-libraries: mingwex
+
   ghc-options: -Wall
 
