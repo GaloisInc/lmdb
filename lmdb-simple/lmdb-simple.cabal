@@ -73,6 +73,7 @@ test-suite hspec
   main-is:             hspec.hs
   other-modules:       Database.LMDB.SimpleSpec
                        Database.LMDB.Simple.DBRefSpec
+                       T1Spec
                        Harness
   build-depends:       base
                      , hspec
