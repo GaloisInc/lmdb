@@ -49,7 +49,7 @@ library
   other-modules:       Database.LMDB.Simple.Internal
 
   build-depends:       base >= 4.7 && < 5
-                     , bytestring >= 0.10 && < 0.12
+                     , bytestring >= 0.10 && < 0.13
                      , lmdb >= 0.2 && < 0.3
                      , serialise >= 0.2 && < 0.3
   ghc-options:         -Wall -Wno-name-shadowing -Wno-unused-do-bind
