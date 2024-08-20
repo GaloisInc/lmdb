@@ -7,7 +7,7 @@ longer maintained, so this fork makes a number of small improvements, including:
 
 * By default, this statically links against a bundled copy of the `lmdb` C
   library, which avoids the need for users to install `lmdb` themselves.
-  Currently, version 0.9.29 of `lmdb` is bundled. This behavior can be toggled
+  Currently, version 0.9.30 of `lmdb` is bundled. This behavior can be toggled
   by opting into the `-fpkg-config` `cabal` flag, which instead uses the
   `pkg-config` tool to locate a foreign `lmdb` library installed on your
   system.
