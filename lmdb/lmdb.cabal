@@ -9,7 +9,7 @@ Description:
   .
   This library has Haskell bindings to the LMDB library. By default, this
   library installs a bundled version of LMDB, so you do not need to install
-  LMDB yourself beforehand. Currently, version 0.9.29 of LMDB is bundled.
+  LMDB yourself beforehand. Currently, version 0.9.30 of LMDB is bundled.
   Alternatively, you can make this library link against your system's version
   of LMDB via @pkg-config@ by enabling the @-fpkg-config@ @cabal@ flag. (For
   instance, you can install LMDB on Ubuntu with @apt-get install liblmdb-dev@.)
