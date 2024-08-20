@@ -203,7 +203,12 @@ typedef SSIZE_T	ssize_t;
 #ifdef __GNUC__
 /** Put infrequently used env functions in separate section */
 # ifdef __APPLE__
-#  define	ESECT	__attribute__ ((section("__TEXT,text_env")))
+#  if defined(__x86_64)
+#   define	ESECT	__attribute__ ((section("__TEXT,text_env")))
+#  else
+/* This causes a linker error B/BL out of range on arm64 */
+#   define  ESECT
+#  endif
 # else
 #  define	ESECT	__attribute__ ((section("text_env")))
 # endif
